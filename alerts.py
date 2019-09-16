@@ -41,7 +41,10 @@ df = pd.DataFrame({'tweet':tweet_text, 'date':tweet_date})
 
 print("DF", df.head)
 
-if 'no service' in df['tweet'].values[0]:
+if not tweet_text:
+    message = "There are no delays"
+    pass 
+elif 'no service' in df['tweet'].values[0]:
     message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
 elif 'closure' in df['tweet'].values[0]:
     message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"

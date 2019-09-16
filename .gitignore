@@ -1,4 +1,2 @@
 credentials.yaml
-Pipfile
-pipfile.lock
-.vscode
+.DS_Store

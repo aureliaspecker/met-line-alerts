@@ -1,3 +1,3 @@
 # met-line-alerts
 
-Readme to come
+<i>Coming soon...</i>

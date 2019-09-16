@@ -1,26 +1,31 @@
 from searchtweets import ResultStream, gen_rule_payload, load_credentials, collect_results
+import requests
+from requests_oauthlib import OAuth1Session
+import yaml
 import json
 import datetime as dt
-import re
 import pandas as pd
 
 creds = load_credentials(filename="./credentials.yaml",
                         yaml_key="search_tweets_api",
                         env_overwrite=False)
 
-mtn = dt.datetime.now() + dt.timedelta(hours=-1, minutes=-1)
-maintenant = mtn.strftime("%Y%m%d%H%M")
-print(maintenant)
+utc = dt.datetime.utcnow() + dt.timedelta(minutes=-1)
+utc_time = utc.strftime("%Y%m%d%H%M")
+print("utc time:", utc_time)
 
-hier = dt.date.today() + dt.timedelta(days=-1)
-print(hier)
+two_hours = dt.datetime.utcnow() + dt.timedelta(hours=-2, minutes=-1)
+two_hours_prior = two_hours.strftime("%Y%m%d%H%M")
+print("UTC -2 hours:", two_hours_prior)
 
-rule = gen_rule_payload("from:metline",from_date=str(hier), to_date=str(maintenant), results_per_call=100) 
-print(rule)
+rule = gen_rule_payload("from:metline -has:mentions",from_date=str(two_hours_prior), to_date=str(utc_time), results_per_call=100) 
+print("rule:", rule)
 
-tweets = collect_results(rule, result_stream_args=creds)
+tweets = collect_results(rule, 
+                         max_results=100,
+                         result_stream_args=creds)
 
-[print(tweet.created_at_datetime, tweet.all_text, end='\n\n') for tweet in tweets[0:50]];
+[print(tweet.created_at_datetime, tweet.all_text, end='\n\n') for tweet in tweets[0:10]];
 
 tweet_text = []
 tweet_date = []
@@ -29,18 +34,56 @@ for tweet in tweets:
     tweet_text.append(tweet.all_text)
     tweet_date.append(tweet.created_at_datetime)
 
-dataframe = pd.DataFrame({'tweet':tweet_text, 'date':tweet_date})
+print("Tweet Date", tweet_date)
+print("Tweet Text", tweet_text)
 
-print(dataframe.head)
+df = pd.DataFrame({'tweet':tweet_text, 'date':tweet_date})
 
-if 'no service' or 'closure' or 'Wembley Park' or 'Wembley Park station' or 'minor delays' or 'severe delays' or 'disruption' or 'delayed' or 'cancelled' or 'stadium' or 'show' or 'concert' or 'game' in dataframe.values[0]:
-    print('Set up Tweet')
-elif 'Baker Street station' in dataframe.values[0]:
-    print('Send Tweet to Aurelia')
-elif 'Hillingdon station' in dataframe.values[0]:
-    print('Send Tweet to David')
+print("DF", df.head)
+
+if 'no service' in df['tweet'].values[0]:
+    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
+elif 'closure' in df['tweet'].values[0]:
+    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
+elif 'Wembley Park' in df['tweet'].values[0]:
+    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
+elif 'delays' in df['tweet'].values[0]:
+    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
+elif 'disruption' in df['tweet'].values[0]:
+    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
+elif 'cancelled' in df['tweet'].values[0]:
+    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
+elif 'sorry' in df['tweet'].values[0]:
+    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
+elif 'stadium' in df['tweet'].values[0]:
+    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
+elif 'Baker Street' in df['tweet'].values[0]:
+    message = "@re_testing 👋 Check https://twitter.com/metline for possible delays"
+elif 'Hillingdon' in df['tweet'].values[0]:
+    message = "David 👋 Check https://twitter.com/metline for possible delays"
 else:
+    message = "There are no delays"
     pass
 
-# Make sure Tweet is sent only once for each Tweet (i.e. adjust time accordingly
-# Set up POST statuses/update with above logic
+print("Message:", message)
+
+with open('./credentials.yaml') as file:
+    data = yaml.safe_load(file)
+
+consumer_key = data["search_tweets_api"]["consumer_key"]
+consumer_secret = data["search_tweets_api"]["consumer_secret"]
+access_token = data["search_tweets_api"]["access_token"]
+access_token_secret = data["search_tweets_api"]["access_token_secret"]
+
+oauth = OAuth1Session(
+    consumer_key,
+    client_secret=consumer_secret,
+    resource_owner_key=access_token,
+    resource_owner_secret=access_token_secret,
+)
+
+params = {"status": message}
+
+oauth.post(
+    "https://api.twitter.com/1.1/statuses/update.json", params=params
+)

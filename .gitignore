@@ -1,1 +1,4 @@
 credentials.yaml
+Pipfile
+pipfile.lock
+.vscode

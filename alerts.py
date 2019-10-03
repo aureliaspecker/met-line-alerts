@@ -41,9 +41,24 @@ df = pd.DataFrame({'tweet':tweet_text, 'date':tweet_date})
 
 print("DF", df.head)
 
+
+# TODO: simplify to not have all of these elifs 
+
+# delays = ['hillingdon', 'baker street', 'no service', 'closure', 'Wembley Park', 'delays', 'disruption', 'cancelled', 'sorry', 'stadium']
+
+# hillingdon = ['Hillingdon']
+
+# bakerstreet = ['Baker Street']
+
+# if not tweet_text:
+#     message = "There are no delays"
+# elif [i for i in delays if(i in tweet_text)]:
+#     message = "There is a delay"
+# else: 
+#     pass
+
 if not tweet_text:
     message = "There are no delays"
-    pass 
 elif 'no service' in df['tweet'].values[0]:
     message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
 elif 'closure' in df['tweet'].values[0]:

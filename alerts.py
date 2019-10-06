@@ -12,11 +12,11 @@ creds = load_credentials(filename="./credentials.yaml",
 
 utc = dt.datetime.utcnow() + dt.timedelta(minutes=-1)
 utc_time = utc.strftime("%Y%m%d%H%M")
-print("utc time:", utc_time)
+print("toDate:", utc_time)
 
 two_hours = dt.datetime.utcnow() + dt.timedelta(hours=-2, minutes=-1)
 two_hours_prior = two_hours.strftime("%Y%m%d%H%M")
-print("UTC -2 hours:", two_hours_prior)
+print("fromDate:", two_hours_prior)
 
 rule = gen_rule_payload("from:metline -has:mentions",from_date=str(two_hours_prior), to_date=str(utc_time), results_per_call=100) 
 print("rule:", rule)
@@ -29,56 +29,29 @@ tweets = collect_results(rule,
 
 tweet_text = []
 tweet_date = []
+combined_tweet_text = ''
 
 for tweet in tweets: 
+    combined_tweet_text += tweet.all_text
     tweet_text.append(tweet.all_text)
     tweet_date.append(tweet.created_at_datetime)
 
-print("Tweet Date", tweet_date)
-print("Tweet Text", tweet_text)
-
 df = pd.DataFrame({'tweet':tweet_text, 'date':tweet_date})
 
-print("DF", df.head)
+all_trigger = {'closure', 'wembley', 'delays', 'disruption', 'cancelled', 'sorry', 'stadium'}
 
+david_trigger = {'hillingdon', 'harrow'}
 
-# TODO: simplify to not have all of these elifs 
+aurelia_trigger = {'baker'}
 
-# delays = ['hillingdon', 'baker street', 'no service', 'closure', 'Wembley Park', 'delays', 'disruption', 'cancelled', 'sorry', 'stadium']
+tweet_words = set(combined_tweet_text.lower().split())
 
-# hillingdon = ['Hillingdon']
-
-# bakerstreet = ['Baker Street']
-
-# if not tweet_text:
-#     message = "There are no delays"
-# elif [i for i in delays if(i in tweet_text)]:
-#     message = "There is a delay"
-# else: 
-#     pass
-
-if not tweet_text:
-    message = "There are no delays"
-elif 'no service' in df['tweet'].values[0]:
+if len(tweet_words.intersection(all_trigger)) != 0: 
     message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
-elif 'closure' in df['tweet'].values[0]:
-    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
-elif 'Wembley Park' in df['tweet'].values[0]:
-    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
-elif 'delays' in df['tweet'].values[0]:
-    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
-elif 'disruption' in df['tweet'].values[0]:
-    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
-elif 'cancelled' in df['tweet'].values[0]:
-    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
-elif 'sorry' in df['tweet'].values[0]:
-    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
-elif 'stadium' in df['tweet'].values[0]:
-    message = "@re_testing & David 👋 check https://twitter.com/metline for possible delays"
-elif 'Baker Street' in df['tweet'].values[0]:
-    message = "@re_testing 👋 Check https://twitter.com/metline for possible delays"
-elif 'Hillingdon' in df['tweet'].values[0]:
+elif len(tweet_words.intersection(david_trigger)) != 0: 
     message = "David 👋 Check https://twitter.com/metline for possible delays"
+elif len(tweet_words.intersection(aurelia_trigger)) != 0:
+    message = "@re_testing 👋 Check https://twitter.com/metline for possible delays"
 else:
     message = "There are no delays"
     pass

@@ -1,5 +1,4 @@
 from searchtweets import ResultStream, gen_rule_payload, load_credentials, collect_results
-import requests
 from requests_oauthlib import OAuth1Session
 import yaml
 import json
@@ -9,6 +8,21 @@ import pandas as pd
 creds = load_credentials(filename="./credentials.yaml",
                         yaml_key="search_tweets_api",
                         env_overwrite=False)
+
+with open('./credentials.yaml') as file:
+    data = yaml.safe_load(file)
+
+consumer_key = data["search_tweets_api"]["consumer_key"]
+consumer_secret = data["search_tweets_api"]["consumer_secret"]
+access_token = data["search_tweets_api"]["access_token"]
+access_token_secret = data["search_tweets_api"]["access_token_secret"]
+
+oauth = OAuth1Session(
+    consumer_key,
+    client_secret=consumer_secret,
+    resource_owner_key=access_token,
+    resource_owner_secret=access_token_secret,
+)
 
 utc = dt.datetime.utcnow() + dt.timedelta(minutes=-1)
 utc_time = utc.strftime("%Y%m%d%H%M")
@@ -27,51 +41,34 @@ tweets = collect_results(rule,
 
 [print(tweet.created_at_datetime, tweet.all_text, end='\n\n') for tweet in tweets[0:10]];
 
-tweet_text = []
-tweet_date = []
-combined_tweet_text = ''
-
-for tweet in tweets: 
-    combined_tweet_text += tweet.all_text
-    tweet_text.append(tweet.all_text)
-    tweet_date.append(tweet.created_at_datetime)
-
-df = pd.DataFrame({'tweet':tweet_text, 'date':tweet_date})
-
 all_trigger = {'closure', 'wembley', 'delays', 'disruption', 'cancelled', 'sorry', 'stadium'}
 
 david_trigger = {'hillingdon', 'harrow'}
 
 aurelia_trigger = {'baker'}
 
+tweet_text = []
+tweet_date = []
+combined_tweet_text = ''
+
+for tweet in tweets: 
+    tweet_text.append(tweet.all_text)
+    tweet_date.append(tweet.created_at_datetime)
+    combined_tweet_text += tweet.all_text
+
 tweet_words = set(combined_tweet_text.lower().split())
 
 if len(tweet_words.intersection(all_trigger)) != 0: 
-    message = "@re_testing & @_dormrod 👋 check https://twitter.com/metline for possible delays"
+    message = "@AureliaSpecker & @_dormrod 👋 check https://twitter.com/metline for possible delays"
 elif len(tweet_words.intersection(david_trigger)) != 0: 
     message = "@_dormrod 👋 Check https://twitter.com/metline for possible delays"
 elif len(tweet_words.intersection(aurelia_trigger)) != 0:
-    message = "@re_testing 👋 Check https://twitter.com/metline for possible delays"
+    message = "@AureliaSpecker 👋 Check https://twitter.com/metline for possible delays"
 else:
     message = "There are no delays"
     pass
 
 print("Message:", message)
-
-with open('./credentials.yaml') as file:
-    data = yaml.safe_load(file)
-
-consumer_key = data["search_tweets_api"]["consumer_key"]
-consumer_secret = data["search_tweets_api"]["consumer_secret"]
-access_token = data["search_tweets_api"]["access_token"]
-access_token_secret = data["search_tweets_api"]["access_token_secret"]
-
-oauth = OAuth1Session(
-    consumer_key,
-    client_secret=consumer_secret,
-    resource_owner_key=access_token,
-    resource_owner_secret=access_token_secret,
-)
 
 params = {"status": message}
 

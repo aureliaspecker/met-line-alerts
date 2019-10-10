@@ -59,11 +59,11 @@ for tweet in tweets:
 tweet_words = set(combined_tweet_text.lower().split())
 
 if len(tweet_words.intersection(all_trigger)) != 0: 
-    message = "@AureliaSpecker and @_dormrod 👋 check https://twitter.com/metline for possible delays"
+    message = "@AureliaSpecker and @_dormrod 👋 check https://twitter.com/metline for possible delays, [{}]".format(utc_time)
 elif len(tweet_words.intersection(david_trigger)) != 0: 
-    message = "@_dormrod Check https://twitter.com/metline for possible delays"
+    message = "@_dormrod Check https://twitter.com/metline for possible delays, [{}]".format(utc_time)
 elif len(tweet_words.intersection(aurelia_trigger)) != 0:
-    message = "@AureliaSpecker 👋 Check https://twitter.com/metline for possible delays"
+    message = "@AureliaSpecker 👋 Check https://twitter.com/metline for possible delays, [{}]".format(utc_time)
 else:
     message = "There are no delays"
     pass

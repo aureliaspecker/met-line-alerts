@@ -1,21 +1,19 @@
-from searchtweets import ResultStream, gen_rule_payload, load_credentials, collect_results
 from requests_oauthlib import OAuth1Session
+import urllib.parse
+import requests
+from requests.auth import AuthBase
+import datetime as dt
 import yaml
 import json
-import datetime as dt
-import pandas as pd
 
-creds = load_credentials(filename="./credentials.yaml",
-                        yaml_key="search_tweets_api",
-                        env_overwrite=False)
-
+#Authentication
 with open('./credentials.yaml') as file:
     data = yaml.safe_load(file)
 
-consumer_key = data["search_tweets_api"]["consumer_key"]
-consumer_secret = data["search_tweets_api"]["consumer_secret"]
-access_token = data["search_tweets_api"]["access_token"]
-access_token_secret = data["search_tweets_api"]["access_token_secret"]
+consumer_key = data["labs_search_tweets_api"]["consumer_key"]
+consumer_secret = data["labs_search_tweets_api"]["consumer_secret"]
+access_token = data["labs_search_tweets_api"]["access_token"]
+access_token_secret = data["labs_search_tweets_api"]["access_token_secret"]
 
 oauth = OAuth1Session(
     consumer_key,
@@ -24,37 +22,84 @@ oauth = OAuth1Session(
     resource_owner_secret=access_token_secret,
 )
 
-utc = dt.datetime.utcnow() + dt.timedelta(minutes=-1)
-utc_time = utc.strftime("%Y%m%d%H%M")
-print("toDate:", utc_time)
+#Generate bearer token with consumer key and consumer secret via https://api.twitter.com/oauth2/token.
+class BearerTokenAuth(AuthBase):
+    def __init__(self, consumer_key, consumer_secret):
+        self.bearer_token_url = "https://api.twitter.com/oauth2/token"
+        self.consumer_key = consumer_key
+        self.consumer_secret = consumer_secret
+        self.bearer_token = self.get_bearer_token()
 
-two_hours = dt.datetime.utcnow() + dt.timedelta(hours=-2, minutes=-1)
-two_hours_prior = two_hours.strftime("%Y%m%d%H%M")
-print("fromDate:", two_hours_prior)
+    def get_bearer_token(self):
+        response = requests.post(
+            self.bearer_token_url,
+            auth=(self.consumer_key, self.consumer_secret),
+            data={'grant_type': 'client_credentials'},
+            headers={'User-Agent': 'LabsRecentSearchQuickStartPython'})
 
-rule = gen_rule_payload("from:metline -has:mentions",from_date=str(two_hours_prior), to_date=str(utc_time), results_per_call=100) 
-print("rule:", rule)
+        if response.status_code is not 200:
+            raise Exception(f"Cannot get a Bearer token (HTTP %d): %s" % (response.status_code, response.text))
 
-tweets = collect_results(rule, 
-                         max_results=100,
-                         result_stream_args=creds)
+        body = response.json()
+        return body['access_token']
 
-[print(tweet.created_at_datetime, tweet.all_text, end='\n\n') for tweet in tweets[0:10]];
+    def __call__(self, r):
+        r.headers['Authorization'] = f"Bearer %s" % self.bearer_token
+        r.headers['User-Agent'] = 'LabsResearchSearchQuickStartPython'
+        return r
 
+#Create Bearer Token for authenticating
+bearer_token = BearerTokenAuth(consumer_key, consumer_secret)
+
+#Generate start_time and end_time parameters
+utc = dt.datetime.utcnow() + dt.timedelta(minutes = -1)
+utc_time = utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+print("end_time:", utc_time)
+
+two_hours = dt.datetime.utcnow() + dt.timedelta(hours = -2, minutes = -1)
+two_hours_prior = two_hours.strftime("%Y-%m-%dT%H:%M:%SZ")
+print("start_time", two_hours_prior)
+
+#Generate query and other parameters
+query = urllib.parse.quote(f"from:metline -has:mentions")
+print(query)
+start_time = urllib.parse.quote(f"{two_hours_prior}")
+print(start_time)
+end_time = urllib.parse.quote(f"{utc_time}")
+print(end_time)
+tweet_format = urllib.parse.quote(f"compact")
+print(tweet_format)
+
+#Request URL
+url = f"https://api.twitter.com/labs/1/tweets/search?query={query}&start_time={start_time}&end_time={end_time}&format={tweet_format}"
+print(url)
+
+#Request headers
+headers = {
+    "Accept-Encoding": "gzip"
+}
+
+response = requests.get(url, auth = bearer_token, headers = headers)
+
+if response.status_code is not 200:
+    raise Exception(f"Request reurned an error:{response.status_code}, {response.text}")
+
+#Convert response to JSON & pull out Tweet text and creation date
+parsed_response = json.loads(response.text)
+print(parsed_response)
+try:
+    tweet_text = [tweet['text'] for tweet in parsed_response['data']]
+    combined_tweet_text = " ".join(tweet_text)
+    print(combined_tweet_text)
+except:
+    combined_tweet_text = " "
+
+#Analyse Tweets
 all_trigger = {'closure', 'wembley', 'delays', 'disruption', 'cancelled', 'sorry', 'stadium'}
 
 david_trigger = {'hillingdon', 'harrow'}
 
 aurelia_trigger = {'baker'}
-
-tweet_text = []
-tweet_date = []
-combined_tweet_text = ''
-
-for tweet in tweets: 
-    tweet_text.append(tweet.all_text)
-    tweet_date.append(tweet.created_at_datetime)
-    combined_tweet_text += tweet.all_text
 
 tweet_words = set(combined_tweet_text.lower().split())
 

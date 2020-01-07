@@ -6,7 +6,7 @@ I use London's TfL Metropolitan line to commute every day to and from work. The 
 
 ### Resources
 
-COMING SOON: related blog post to help you reproduce this app.
+Check out [this blog post](https://dev.to/twitterdev/using-the-twitter-api-to-make-your-commute-easier-3od0) for a walkthrough on how to reproduct this app.
 
 You will need the following
 

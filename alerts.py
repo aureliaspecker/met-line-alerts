@@ -22,7 +22,7 @@ oauth = OAuth1Session(
     resource_owner_secret=access_token_secret,
 )
 
-#Generate bearer token with consumer key and consumer secret via https://api.twitter.com/oauth2/token.
+#Generate bearer token with consumer key and consumer secret via https://api.twitter.com/oauth2/token
 class BearerTokenAuth(AuthBase):
     def __init__(self, consumer_key, consumer_secret):
         self.bearer_token_url = "https://api.twitter.com/oauth2/token"
@@ -82,7 +82,7 @@ headers = {
 response = requests.get(url, auth = bearer_token, headers = headers)
 
 if response.status_code is not 200:
-    raise Exception(f"Request reurned an error:{response.status_code}, {response.text}")
+    raise Exception(f"Request returned an error:{response.status_code}, {response.text}")
 
 #Convert response to JSON & pull out Tweet text and creation date
 parsed_response = json.loads(response.text)
@@ -94,7 +94,7 @@ try:
 except:
     combined_tweet_text = " "
 
-#Analyse Tweets
+#Analyse Tweets & notify commuter (details specific to use case)
 all_trigger = {'closure', 'wembley', 'delays', 'disruption', 'cancelled', 'sorry', 'stadium'}
 
 david_trigger = {'hillingdon', 'harrow'}

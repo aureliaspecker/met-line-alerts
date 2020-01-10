@@ -22,9 +22,9 @@ You will need the following
 
 ### Credentials
 
-Create a `credentials.yaml` file and subsequently add it to your `.gitignore` file. 
+Create a `credentials.yaml` file and subsequently add it to your `.gitignore` file.
 
-In `credentials.yaml`, add your access keys and tokens in the format below. Insert your access keys and tokens for each field accordingly.
+In `credentials.yaml`, add your access keys and tokens in the format below. These are needed to access the [POST statuses/update endpoint](https://developer.twitter.com/en/docs/tweets/post-and-engage/api-reference/post-statuses-update). Your consumer key and consumer secret are also needed to generate a bearer token to access the [Labs recent search endpoint](https://developer.twitter.com/en/docs/labs/recent-search/overview).
 
 ```
 labs_search_tweets_api

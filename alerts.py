@@ -7,7 +7,7 @@ import yaml
 import json
 
 #Authentication
-with open('./credentials.yaml') as file:
+with open("./credentials.yaml") as file:
     data = yaml.safe_load(file)
 
 consumer_key = data["labs_search_tweets_api"]["consumer_key"]
@@ -34,18 +34,18 @@ class BearerTokenAuth(AuthBase):
         response = requests.post(
             self.bearer_token_url,
             auth=(self.consumer_key, self.consumer_secret),
-            data={'grant_type': 'client_credentials'},
-            headers={'User-Agent': 'LabsRecentSearchQuickStartPython'})
+            data={"grant_type": "client_credentials"},
+            headers={"User-Agent": "LabsMetTutorialPython"})
 
         if response.status_code is not 200:
             raise Exception(f"Cannot get a Bearer token (HTTP %d): %s" % (response.status_code, response.text))
 
         body = response.json()
-        return body['access_token']
+        return body["access_token"]
 
     def __call__(self, r):
-        r.headers['Authorization'] = f"Bearer %s" % self.bearer_token
-        r.headers['User-Agent'] = 'LabsResearchSearchQuickStartPython'
+        r.headers["Authorization"] = f"Bearer %s" % self.bearer_token
+        r.headers["User-Agent"] = "LabsMetTutorialPython"
         return r
 
 #Create Bearer Token for authenticating
@@ -88,27 +88,30 @@ if response.status_code is not 200:
 parsed_response = json.loads(response.text)
 print(parsed_response)
 try:
-    tweet_text = [tweet['text'] for tweet in parsed_response['data']]
+    tweet_text = [tweet["text"] for tweet in parsed_response["data"]]
     combined_tweet_text = " ".join(tweet_text)
     print(combined_tweet_text)
 except:
     combined_tweet_text = " "
 
 #Analyse Tweets & notify commuter (details specific to use case)
-all_trigger = {'closure', 'wembley', 'delays', 'disruption', 'cancelled', 'sorry', 'stadium'}
+all_trigger = {"closure", "wembley", "delays", "disruption", "cancelled", "sorry", "stadium"}
 
-david_trigger = {'hillingdon', 'harrow'}
+david_trigger = {"hillingdon", "harrow"}
 
-aurelia_trigger = {'baker'}
+aurelia_trigger = {"baker"}
 
 tweet_words = set(combined_tweet_text.lower().split())
 
+commuter_1 = "@AureliaSpecker"
+commuter_2 = "@dormrod"
+
 if len(tweet_words.intersection(all_trigger)) != 0: 
-    message = "@AureliaSpecker and @_dormrod 👋 check https://twitter.com/metline for possible delays, [{}]".format(utc_time)
-elif len(tweet_words.intersection(david_trigger)) != 0: 
-    message = "@_dormrod Check https://twitter.com/metline for possible delays, [{}]".format(utc_time)
+    message = f"{commuter_1} and {commuter_2} 👋 check https://twitter.com/metline for possible delays, [{utc_time}]"
+elif len(tweet_words.intersection(david_trigger)) != 0:
+    message = f"{commuter_2} 👋 check https://twitter.com/metline for possible delays, [{utc_time}]" 
 elif len(tweet_words.intersection(aurelia_trigger)) != 0:
-    message = "@AureliaSpecker 👋 Check https://twitter.com/metline for possible delays, [{}]".format(utc_time)
+    message = f"{commuter_1} 👋 check https://twitter.com/metline for possible delays, [{utc_time}]"
 else:
     message = "There are no delays"
     pass

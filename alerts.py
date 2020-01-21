@@ -6,7 +6,7 @@ import datetime as dt
 import yaml
 import json
 
-#Authentication
+# Authentication
 with open("./credentials.yaml") as file:
     data = yaml.safe_load(file)
 
@@ -22,7 +22,7 @@ oauth = OAuth1Session(
     resource_owner_secret=access_token_secret,
 )
 
-#Generate bearer token with consumer key and consumer secret via https://api.twitter.com/oauth2/token
+# Generate bearer token with consumer key and consumer secret via https://api.twitter.com/oauth2/token
 class BearerTokenAuth(AuthBase):
     def __init__(self, consumer_key, consumer_secret):
         self.bearer_token_url = "https://api.twitter.com/oauth2/token"
@@ -48,10 +48,10 @@ class BearerTokenAuth(AuthBase):
         r.headers["User-Agent"] = "LabsMetTutorialPython"
         return r
 
-#Create Bearer Token for authenticating
+# Create Bearer Token for authenticating
 bearer_token = BearerTokenAuth(consumer_key, consumer_secret)
 
-#Generate start_time and end_time parameters
+# Generate start_time and end_time parameters
 utc = dt.datetime.utcnow() + dt.timedelta(minutes = -1)
 utc_time = utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 print("end_time:", utc_time)
@@ -60,7 +60,7 @@ two_hours = dt.datetime.utcnow() + dt.timedelta(hours = -2, minutes = -1)
 two_hours_prior = two_hours.strftime("%Y-%m-%dT%H:%M:%SZ")
 print("start_time", two_hours_prior)
 
-#Generate query and other parameters
+# Generate query and other parameters
 query = urllib.parse.quote(f"from:metline -has:mentions")
 print(query)
 start_time = urllib.parse.quote(f"{two_hours_prior}")
@@ -70,11 +70,11 @@ print(end_time)
 tweet_format = urllib.parse.quote(f"compact")
 print(tweet_format)
 
-#Request URL
+# Request URL
 url = f"https://api.twitter.com/labs/1/tweets/search?query={query}&start_time={start_time}&end_time={end_time}&format={tweet_format}"
 print(url)
 
-#Request headers
+# Request headers
 headers = {
     "Accept-Encoding": "gzip"
 }
@@ -84,7 +84,7 @@ response = requests.get(url, auth = bearer_token, headers = headers)
 if response.status_code is not 200:
     raise Exception(f"Request returned an error:{response.status_code}, {response.text}")
 
-#Convert response to JSON & pull out Tweet text and creation date
+# Convert response to JSON & pull out Tweet text
 parsed_response = json.loads(response.text)
 print(parsed_response)
 try:
@@ -94,7 +94,7 @@ try:
 except:
     combined_tweet_text = " "
 
-#Analyse Tweets & notify commuter (details specific to use case)
+# Analyse Tweets & notify commuter (details specific to use case)
 all_trigger = {"closure", "wembley", "delays", "disruption", "cancelled", "sorry", "stadium"}
 
 david_trigger = {"hillingdon", "harrow"}

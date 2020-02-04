@@ -71,7 +71,8 @@ tweet_format = urllib.parse.quote(f"compact")
 print(tweet_format)
 
 # Request URL
-url = f"https://api.twitter.com/labs/1/tweets/search?query={query}&start_time={start_time}&end_time={end_time}&format={tweet_format}"
+endpoint = "https://api.twitter.com/labs/1/tweets/search" 
+url = f"{endpoint}?query={query}&start_time={start_time}&end_time={end_time}&format={tweet_format}"
 print(url)
 
 # Request headers

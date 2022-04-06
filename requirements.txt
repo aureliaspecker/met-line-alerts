@@ -217,7 +217,7 @@ traitlets==4.3.2
 tweepy==3.7.0
 tweet-parser==1.13.1
 twilio==6.19.2
-Twisted==19.7.0
+Twisted==22.2.0
 TwitterAPI==2.5.4
 typed-ast==1.4.0
 unicodecsv==0.14.1
